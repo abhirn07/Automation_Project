@@ -40,3 +40,26 @@ i [[ -f /tmp/${name}=httpd-logs-${timestamp}.tar ]]; then
      #statements
      aws s3 cp /tmp/${name}-httpd-logs-${timestamp}.tar s3//${s3_bucket}/${name}-httpd-logs-${timestamp}.tar
 fi
+
+docroots="/var/www/html"
+# check if inventory file exists
+if [[ ! -f ${docroot}/inventory.html ]]; then
+    #statements
+    echo -e 'log Type\t-\tTime created\t-\tType\t-\tsize' > ${docroot}/inventory.html
+
+fi
+
+# Inserting Logs into the file 
+if [[ -f ${docroot}/inventory.html ]]; then
+     #statements
+   size=$(du -h /tmp/${name}-httpd-logs-${timestamp}.tar | awk '{print $1}')
+        echo -e "httpd-logs\t-\t${timestamp}|t-\ttar\t-\t${size}" >> ${docroot}/inventory.html
+
+fi
+
+# create a cron job that runs service every minutes/day
+if [[ ! -f /etc/cron.d/automation ]]; then
+      #statements 
+     echo "0 0 * * * rooot /root/automation.sh" >> /etc/cron.d/automation
+
+fi
