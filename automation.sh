@@ -36,7 +36,7 @@ tar -cf /tmp/${name}-httpd-logs-${timestamp}.tar *.log
 
 
 # copy logs to s3 bucket
-i [[ -f /tmp/${name}=httpd-logs-${timestamp}.tar ]]; then
+if [[ -f /tmp/${name}=httpd-logs-${timestamp}.tar ]]; then
      #statements
      aws s3 cp /tmp/${name}-httpd-logs-${timestamp}.tar s3//${upgrad-abhishek}/${name}-httpd-logs-${timestamp}.tar
 fi
