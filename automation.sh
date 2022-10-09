@@ -33,12 +33,14 @@ timestamp=$(date '+%d%m%y-%H%M%S')
 # Create tar archive of apache2 access and error logs 
 cd /var/log/apache2
 tar -cf /tmp/${name}-httpd-logs-${timestamp}.tar *.log
+mv $name-httpd=logs-${timestamp}.tar /tmp/
+
 
 
 # copy logs to s3 bucket
 if [[ -f /tmp/${name}=httpd-logs-${timestamp}.tar ]]; then
      #statements
-     aws s3 cp /tmp/${name}-httpd-logs-${timestamp}.tar s3//${upgrad-abhishek}/${name}-httpd-logs-${timestamp}.tar
+     aws s3 cp /tmp/${name}-httpd-logs-${timestamp}.tar s3//${s3_bucket}/${name}-httpd-logs-${timestamp}.tar
 fi
 
 docroots="/var/www/html"
