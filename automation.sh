@@ -1,67 +1,60 @@
 #!/bin/bash
+s3_bucket='upgrad-abhishek'
+myname='abhishek'
+timestamp=$(date +"%d%m%Y-%H%M%S")
+logtype='httpd-logs'
+type='tar'
 
-# Variables
-name="Abhishek"
-s3_bucket="upgrad-abhishek"
 
-# update the ubuntu repositories
-apt update -y
+sudo apt update -y
 
-# Check if apache2 is installed
-if [[ apache2 != $(dpkg --get-selections apache2 | awk '{print $1}') ]]; then
-       #statements 
-       apt install apache2 -y
+if which apache2 > /dev/null ; then
+        echo "exists"
+else
+sudo apt install apache2 -y
 fi
 
-# Ensures that apache2 serivce is runninng
-runnig=$(systemct1 status apache2 | grep active | awk '{print $3}' | tr -d '()')
-if [[ running != ${running} ]]; then
-        #statements 
-        systemct1 start apache2
-fi
-
-# Ensures apache2 service is enabled
-enabled=$(systemct1 is -enabled apache2 | grep "enabled")
-if [[ enabled != ${enabled} ]]; then
-   #statements 
-   systemct1 enable apache2
-fi
-
-# Creating file name 
-timestamp=$(date '+%d%m%y-%H%M%S')
-
-# Create tar archive of apache2 access and error logs 
-cd /var/log/apache2
-tar -cf /tmp/${name}-httpd-logs-${timestamp}.tar *.log
-mv $name-httpd=logs-${timestamp}.tar /tmp/
-
-
-
-# copy logs to s3 bucket
-if [[ -f /tmp/${name}=httpd-logs-${timestamp}.tar ]]; then
-     #statements
-     aws s3 cp /tmp/${name}-httpd-logs-${timestamp}.tar s3//${s3_bucket}/${name}-httpd-logs-${timestamp}.tar
-fi
-
-docroots="/var/www/html"
-# check if inventory file exists
-if [[ ! -f ${docroot}/inventory.html ]]; then
-    #statements
-    echo -e 'log Type\t-\tTime created\t-\tType\t-\tsize' > ${docroot}/inventory.html
+if ! pidof apache2 > /dev/null
+then
+    systemctl restart apache2
+else
+        service apache2 status |grep running
 
 fi
 
-# Inserting Logs into the file 
-if [[ -f ${docroot}/inventory.html ]]; then
-     #statements
-   size=$(du -h /tmp/${name}-httpd-logs-${timestamp}.tar | awk '{print $1}')
-        echo -e "httpd-logs\t-\t${timestamp}|t-\ttar\t-\t${size}" >> ${docroot}/inventory.html
-
+if [[ $(systemctl list-unit-files | grep apache2.service | awk '{ print $2}') ==  "enabled" ]] ; then
+        echo "exists"
+else
+        systemctl enable apache2
 fi
 
-# create a cron job that runs service every minutes/day
-if [[ ! -f /etc/cron.d/automation ]]; then
-      #statements 
-     echo "0 0 * * * rooot /root/automation.sh" >> /etc/cron.d/automation
+cd /var/log/apache2 && tar -czf $myname-$logtype-${timestamp}.$type *.log &&
+mv $myname-$logtype-${timestamp}.$type /tmp/
 
+
+
+aws s3  cp /tmp/$myname-$logtype-${timestamp}.$type s3://$s3_bucket/$myname-$logtype-${timestamp}.$type
+
+
+path="/var/www/html"
+if [[  -s ${path}/inventory.html ]]
+then
+        echo "exists"
+else
+        echo -e 'Log Type\t-\tTime Created\t-\tType\t-\tSize' > ${path}/inventory.html
+fi
+
+size=$(du -h /tmp/$myname-httpd-logs-${timestamp}.tar | awk '{print $1}')
+if [[ -f ${path}/inventory.html ]]
+then
+        echo -e "$logtype\t-\t${timestamp}\t-\t$type\t-\t${size}" >> ${path}/inventory.html
+fi
+
+if [ -s "/etc/cron.d/automation" ]
+then
+echo "exists"
+else
+  cat >>/etc/cron.d/automation << EOF
+   0 0 * * *  /root/Automation_project/automation.sh
+EOF
 fi
