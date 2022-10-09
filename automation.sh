@@ -52,7 +52,7 @@ fi
 
 if [ -s "/etc/cron.d/automation" ]
 then
-echo "exists"
+echo "exist"
 else
   cat >>/etc/cron.d/automation << EOF
    0 0 * * *  /root/Automation_project/automation.sh
